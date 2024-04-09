@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+{% load unicorn %}
+<html>
+<head>
+    <title>General dashboard</title>
+    {% unicorn_scripts %}
+    {% load bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+</head>
+
+<body>
+    {% csrf_token %}
+    {% block content %}
+    {% endblock %}
+</body>
+
+</html>

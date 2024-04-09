@@ -1,0 +1,12 @@
+{% extends 'index.html' %}
+{% load unicorn %}
+{% block content %}
+
+<div unicorn:view>
+    {% unicorn 'search_form' %}
+    {% for tx in transactions %}
+        <div>{{tx.id}}</div>
+    {% endfor %}
+</div>
+
+{% endblock %}
