@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django_unicorn',
     'home',
-    'bootstarp5',
+    'bootstrap5',
 ]
 
 MIDDLEWARE = [

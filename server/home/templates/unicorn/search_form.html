@@ -1,6 +1,17 @@
 {% load static %}
 
 <div>
-    <input
-            unicorn:model.lazy="address" type="text" id="text" /><br />
+    <style>
+        [unicorn\:error\:invalid] {
+          border: 1px solid red !important;
+        }
+        [unicorn\:error\:required] {
+          border: 1px solid red !important;
+        }
+      </style>
+    <input unicorn:model.lazy="from_address" unicorn:error:invalid="invalid" type="text" /><br />
+    <input unicorn:model.lazy="to_address" unicorn:error:invalid="invalid" type="text" /><br />
+    <input unicorn:model="only_direct" unicorn:error:invalid="invalid" type="checkbox" /><br />
+    <input unicorn:model.lazy="begin_date" unicorn:error:invalid="invalid" type="datetime-local" min="2023-12-14T23:59" max="2014-01-14T23:59" /><br />
+    <input unicorn:model.lazy="end_date" unicorn:error:invalid="invalid" type="datetime-local" min="2023-12-14T23:59" max="2014-01-14T23:59" /><br />
 </div>
