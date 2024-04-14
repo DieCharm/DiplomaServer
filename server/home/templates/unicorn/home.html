@@ -3,9 +3,15 @@
 {% block content %}
 
 <div unicorn:view>
-    {% unicorn 'search_form' %}
-    {% for tx in transactions %}
-        <div>{{tx.id}}</div>
+    <div>
+        <input unicorn:model.lazy="from_address" type="text" /><br />
+        <input unicorn:model.lazy="to_address" type="text" /><br />
+        <input unicorn:model="only_direct" type="checkbox" /><br />
+        <input unicorn:model.lazy="begin_date" type="datetime-local" min="2023-12-14T23:59" max="2014-01-14T23:59" /><br />
+        <input unicorn:model.lazy="end_date" type="datetime-local" min="2023-12-14T23:59" max="2014-01-14T23:59" /><br />
+    </div>
+    {% for block in filtered_blocks %}
+        <div>{{block.id}} {{block.timestamp}}</div>
     {% endfor %}
 </div>
 

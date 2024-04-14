@@ -1,4 +1,5 @@
 from django_unicorn.components import UnicornView
 
-class ListView(UnicornView):
+
+class BlocksView(UnicornView):
     pass

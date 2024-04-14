@@ -1,64 +1,110 @@
 from django_unicorn.components import UnicornView
-from home.models import Transaction, Trace
 import enum
-import bson
-import pymongo
-from home.utils.parse_data import parse_data
+from home.utils.load_data_from_db import load_data_from_db
+from home.utils.validate_address import validate_address
+from home.utils.validate_date import validate_date
+from datetime import datetime
 
 class Network(enum.Enum):
     ETH = 'Ethereum'
     BSC = 'BSC'
 
 class HomeView(UnicornView):
+    
     network = Network.ETH
+    blocks = []
     transactions = []
     traces = []
 
+    filtered_blocks = []
+    filtered_transactions = []
+    filtered_traces = []
+
+    from_address = ''
     prev_from = ''
+    from_address_valid = True
+
+    to_address = ''
     prev_to = ''
+    to_address_valid = True
 
-    def load_data(self, from_addr_str, to_addr_str, begin_date, end_date):
-        print('load_data')
-        if (len(from_addr_str) == 0 and len(to_addr_str) == 0):
+    begin_date = ''
+    prev_begin_date = ''
+    begin_date_valid = True
+
+    end_date = ''
+    prev_end_date = ''
+    end_date_valid = True
+
+    only_direct = False
+    prev_only_direct = False
+
+    def updated_from_address(self, prompt):
+        self.from_address_valid = validate_address(prompt)
+        if (self.from_address_valid):
+            self.validate_load_request()
+
+    def updated_to_address(self, prompt):
+        self.to_address_valid = validate_address(prompt)
+        if (self.to_address_valid):
+            self.validate_load_request()
+
+    def updated_begin_date(self, prompt):
+        self.begin_date_valid = validate_date(prompt)
+        if (self.begin_date_valid):
+            self.filter_data()
+
+    def updated_end_date(self, prompt):
+        self.end_date_valid = validate_date(prompt)
+        if (self.end_date_valid):
+            self.filter_data()
+
+    def updated_only_direct(self, prompt):
+        self.filter_data()
+
+    def validate_load_request(self):
+
+        if (len(self.from_address) == 0 and len(self.to_address) == 0
+            or not (self.from_address_valid and self.to_address_valid
+                 and self.begin_date_valid and self.end_date_valid)):
             return
         
-        if (from_addr_str == self.prev_from and to_addr_str == self.prev_to):
-            return
-        
-        self.prev_from = from_addr_str
-        self.prev_to = to_addr_str
+        else:
+            self.prev_from = self.from_address
+            self.prev_to = self.to_address
+            self.prev_begin_date = self.begin_date
+            self.prev_end_date = self.end_date
+            self.prev_only_direct = self.only_direct
+            
 
-        from_addr = bson.Binary(bytearray.fromhex(from_addr_str))
-        to_addr = bson.Binary(bytearray.fromhex(to_addr_str))
-        mongo = pymongo.MongoClient('mongodb://localhost:27017')
-        db = mongo[self.network.value]
-        traces_collection = db["Traces"]
-        transactions_collection = db["Transactions"]
+    def load_data(self):
 
-        mongo_query = {}
-        if (len(from_addr_str) >= 40):
-            mongo_query['from'] = from_addr
-        if (len(to_addr_str) >= 40):
-            mongo_query['to'] = to_addr
+        (self.blocks,
+         self.traces,
+         self.transactions) = load_data_from_db(self.network.value,
+                                                self.from_address,
+                                                self.to_address)
 
-        print(mongo_query)
+        self.filter_data()
 
-        # traces_cursor = traces_collection.find(mongo_query)
+    
+    def filter_data(self):
 
-        # traces_list = [trace for trace in traces_cursor]
-        # print(f'{len(traces_list)} traces')
+        begin_timestamp = 0
+        try:
+            begin_timestamp = datetime.timestamp(self.begin_date)
+        except:
+            pass
 
-        # transactions_hashes = [trace['transaction_hash'] for trace in traces_list]
-        # transactions_hashes = set(transactions_hashes)
-        # transactions_list = []
-        # print(f'{len(transactions_hashes)} transactions')
-        # for tx_hash in transactions_hashes:
-        #     transactions_list.append(transactions_collection.find_one({'_id': bson.Binary(tx_hash)}))
+        end_timestamp = 0
+        try:
+            end_timestamp = datetime.timestamp(self.end_date)
+        except:
+            pass
 
-        # for trace in traces_list:
-        #     parse_data(trace)
-        # for transaction in transactions_list:
-        #     parse_data(transaction)
+        if (begin_timestamp >= 1702598399 and begin_timestamp <= 19008564):
+            self.filtered_blocks = filter(lambda block: block['timestamp'] > begin_timestamp, self.blocks)
+            #self.filtered_transactions = filter(lambda tx: tx[])
+        if (end_timestamp >= 1702598399 and end_timestamp <= 19008564):
+            self.filtered_blocks = filter(lambda block: block['timestamp'] < end_timestamp, self.blocks)
 
-        # self.traces = traces_list
-        # self.transactions = transactions_list
