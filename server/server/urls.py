@@ -16,8 +16,10 @@ Including another URLconf
 """
 from django.urls import path, include
 from home.components.home import HomeView
+from blocks.components.blocks import BlocksView
 
 urlpatterns = [
     path("unicorn/", include("django_unicorn.urls")),
-    path("", HomeView.as_view())
-    ]
+    path("", HomeView.as_view()),
+    path("blocks", BlocksView.as_view())
+]

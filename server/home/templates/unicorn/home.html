@@ -3,16 +3,132 @@
 {% block content %}
 
 <div unicorn:view>
-    <div>
-        <input unicorn:model.lazy="from_address" type="text" /><br />
-        <input unicorn:model.lazy="to_address" type="text" /><br />
-        <input unicorn:model="only_direct" type="checkbox" /><br />
-        <input unicorn:model.lazy="begin_date" type="datetime-local" min="2023-12-14T23:59" max="2014-01-14T23:59" /><br />
-        <input unicorn:model.lazy="end_date" type="datetime-local" min="2023-12-14T23:59" max="2014-01-14T23:59" /><br />
+
+    <div class="m-3">
+        <div class="row">
+
+            <div class="col-7">
+                <div class="row">
+                    <div class="col-6">
+                        <input
+                            unicorn:model.lazy="from_address"
+                            value="{{from_address}}"
+                            class="form-control {% if not from_address_valid %} is-invalid {% endif %}"
+                            placeholder="From address"
+                            type="text" />
+                        {% if not from_address_valid %}
+                            <div class="invalid-feedback">
+                                Input correct hexadecimal-format address
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-6">
+                        <input
+                            unicorn:model.lazy="to_address"
+                            value="{{to_address}}"
+                            class="form-control {% if not to_address_valid %} is-invalid {% endif %}"
+                            placeholder="To address"
+                            type="text" />
+                        {% if not to_address_valid %}
+                            <div class="invalid-feedback">
+                                Input correct hexadecimal-format address
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-5">
+                <div class="row">
+
+                    <div class="form-group row col-6">
+                        <label
+                            for="beginDateInput"
+                            class="col-sm-2 col-form-label">
+                            From
+                        </label>
+                        <div class="col-sm-10">
+                            <input
+                                unicorn:model.lazy="begin_date"
+                                value="{{begin_date}}"
+                                id="beginDateInput"
+                                class="form-control {% if not begin_date_valid %} is-invalid {% endif %}"
+                                type="datetime-local"
+                                min="2023-12-14T23:59"
+                                max="2024-01-14T23:59" />
+                            {% if not begin_date_valid %}
+                                <div class="invalid-feedback">
+                                    We currently only have data for one month
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-group row col-6">
+                        <label
+                            for="endDateInput"
+                            class="col-sm-2 col-form-label">
+                            To
+                        </label>
+                        <div class="col-sm-10">
+                            <input
+                                unicorn:model.lazy="end_date"
+                                value="{{end_date}}"
+                                id="endDateInput"
+                                class="form-control {% if not end_date_valid %} is-invalid {% endif %}"
+                                type="datetime-local"
+                                min="2023-12-14T23:59"
+                                max="2024-01-14T23:59" />
+                            {% if not end_date_valid %}
+                                <div class="invalid-feedback">
+                                    We currently only have data for one month
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
     </div>
+    {{from_address}}<br />
+    {{to_address}}<br />
+    {{begin_date}}<br />
+    {{end_date}}<br />
+    {{only_direct}}<br />
+    {{network}}
     {% for block in filtered_blocks %}
         <div>{{block.id}} {{block.timestamp}}</div>
     {% endfor %}
+
+    <div class="row justify-content-end position-absolute top-0 end-0 m-2 w-50">
+        <div class="col-3 row m-2">
+            <div class="col-2">
+                <input
+                    unicorn:model="only_direct"
+                    class="form-check-input col"
+                    type="checkbox"
+                    id="onlyDirectCheck">
+            </div>
+            <label
+                class="form-check-label col-10"
+                for="onlyDirectCheck">
+                Only direct calls
+            </label>
+        </div>
+        <div class="col-3">
+            <select
+                unicorn:model="network"
+                unicorn:click="callback"
+                class="form-select">
+                {% for network_option in networks %}
+                    <option value="{{network_option}}">{{network_option}}</option>  
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
 </div>
 
 {% endblock %}

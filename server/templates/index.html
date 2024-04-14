@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 {% load unicorn %}
+{% load static %}
 <html>
 <head>
-    <title>General dashboard</title>
+    <title>Blockchain diver</title>
     {% unicorn_scripts %}
     {% load bootstrap5 %}
     {% bootstrap_css %}
@@ -11,6 +12,29 @@
 
 <body>
     {% csrf_token %}
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+
+            <div class="nav navbar-nav">
+                <div class="navbar-brand">
+                    Analyze blockchains
+                </div>
+                <a
+                    class="nav-item nav-link {% if request.path == '/' %} active{% endif %}"
+                    href="/">
+                    By addresses
+                </a>
+                <a
+                    class="nav-item nav-link {% if request.path == '/blocks' %} active{% endif %}"
+                    href="/blocks">
+                    By blocks
+                </a>
+            </div>
+
+        </div>
+      </nav>
+    
     {% block content %}
     {% endblock %}
 </body>

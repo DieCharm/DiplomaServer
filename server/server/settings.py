@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django_unicorn',
     'home',
+    'blocks',
     'bootstrap5',
 ]
 

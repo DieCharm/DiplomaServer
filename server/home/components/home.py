@@ -5,13 +5,11 @@ from home.utils.validate_address import validate_address
 from home.utils.validate_date import validate_date
 from datetime import datetime
 
-class Network(enum.Enum):
-    ETH = 'Ethereum'
-    BSC = 'BSC'
-
 class HomeView(UnicornView):
+
+    networks = ['Ethereum', 'BSC'] 
     
-    network = Network.ETH
+    network = networks[0]
     blocks = []
     transactions = []
     traces = []
@@ -28,16 +26,16 @@ class HomeView(UnicornView):
     prev_to = ''
     to_address_valid = True
 
-    begin_date = ''
+    begin_date = '2023-12-14T23:59'
     prev_begin_date = ''
     begin_date_valid = True
 
-    end_date = ''
+    end_date = '2024-01-14T23:59'
     prev_end_date = ''
     end_date_valid = True
-
+ 
     only_direct = False
-    prev_only_direct = False
+    prev_only_direct = False 
 
     def updated_from_address(self, prompt):
         self.from_address_valid = validate_address(prompt)
@@ -59,8 +57,12 @@ class HomeView(UnicornView):
         if (self.end_date_valid):
             self.filter_data()
 
-    def updated_only_direct(self, prompt):
-        self.filter_data()
+    def update_only_direct(self): 
+        print('Update')
+
+    # def updated_only_direct(self, prompt):
+    #     # recount metrics
+    #     pass
 
     def validate_load_request(self):
 
@@ -81,7 +83,7 @@ class HomeView(UnicornView):
 
         (self.blocks,
          self.traces,
-         self.transactions) = load_data_from_db(self.network.value,
+         self.transactions) = load_data_from_db(self.network,
                                                 self.from_address,
                                                 self.to_address)
 

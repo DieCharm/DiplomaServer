@@ -1,3 +1,10 @@
-<div>
-    <!-- put component code here -->
+{% extends 'index.html' %}
+{% load unicorn %}
+{% block content %}
+
+<div unicorn:view class="bg-danger container-fluid">
+    {{mess}}<br />
+    {{mess}}
 </div>
+
+{% endblock %}
