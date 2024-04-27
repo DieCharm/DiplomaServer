@@ -91,36 +91,41 @@
             </div>
 
         </div>
+
+        <button
+            unicorn:click="validate_load_request"
+            type="button"
+            class="btn btn-primary m-2"
+            {% if not from_address_valid or not to_address_valid or not begin_date_valid or not end_date_valid %} disabled {% endif %}>
+            Request
+        </button>
     </div>
-    {{from_address}}<br />
-    {{to_address}}<br />
-    {{begin_date}}<br />
-    {{end_date}}<br />
-    {{only_direct}}<br />
-    {{network}}
+
+    <span class="text-danger">{{from_address}}</span>
+    <span class="text-danger">{{to_address}}</span>
+
     {% for block in filtered_blocks %}
         <div>{{block.id}} {{block.timestamp}}</div>
+        <ul>
+            {% for tx in filtered_transactions %}
+                <li>
+                    <div>{{tx.id}}  Gas: {{tx.gas}}</div>
+                    <ul>
+                        {% for tr in filtered_traces %}
+                            <li>
+                                <div>From: {{tr.from}}  To: {{tr.to}}  Value: {{tr.value}}</div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+        </ul>
     {% endfor %}
 
     <div class="row justify-content-end position-absolute top-0 end-0 m-2 w-50">
-        <div class="col-3 row m-2">
-            <div class="col-2">
-                <input
-                    unicorn:model="only_direct"
-                    class="form-check-input col"
-                    type="checkbox"
-                    id="onlyDirectCheck">
-            </div>
-            <label
-                class="form-check-label col-10"
-                for="onlyDirectCheck">
-                Only direct calls
-            </label>
-        </div>
         <div class="col-3">
             <select
                 unicorn:model="network"
-                unicorn:click="callback"
                 class="form-select">
                 {% for network_option in networks %}
                     <option value="{{network_option}}">{{network_option}}</option>  

@@ -1,9 +1,8 @@
 from django_unicorn.components import UnicornView
-import enum
 from home.utils.load_data_from_db import load_data_from_db
 from home.utils.validate_address import validate_address
+from home.utils.timestamp_from_datetime_str import timestamp_from_datetime_str
 from home.utils.validate_date import validate_date
-from datetime import datetime
 
 class HomeView(UnicornView):
 
@@ -19,94 +18,114 @@ class HomeView(UnicornView):
     filtered_traces = []
 
     from_address = ''
-    prev_from = ''
     from_address_valid = True
 
     to_address = ''
-    prev_to = ''
     to_address_valid = True
 
     begin_date = '2023-12-14T23:59'
-    prev_begin_date = ''
+    begin_date_timestamp = timestamp_from_datetime_str(begin_date)
     begin_date_valid = True
 
     end_date = '2024-01-14T23:59'
-    prev_end_date = ''
+    end_date_timestamp = timestamp_from_datetime_str(end_date)
     end_date_valid = True
- 
-    only_direct = False
-    prev_only_direct = False 
-
-    def updated_from_address(self, prompt):
-        self.from_address_valid = validate_address(prompt)
-        if (self.from_address_valid):
-            self.validate_load_request()
-
-    def updated_to_address(self, prompt):
-        self.to_address_valid = validate_address(prompt)
-        if (self.to_address_valid):
-            self.validate_load_request()
-
-    def updated_begin_date(self, prompt):
-        self.begin_date_valid = validate_date(prompt)
-        if (self.begin_date_valid):
-            self.filter_data()
-
-    def updated_end_date(self, prompt):
-        self.end_date_valid = validate_date(prompt)
-        if (self.end_date_valid):
-            self.filter_data()
-
-    def update_only_direct(self): 
-        print('Update')
-
-    # def updated_only_direct(self, prompt):
-    #     # recount metrics
-    #     pass
 
     def validate_load_request(self):
 
         if (len(self.from_address) == 0 and len(self.to_address) == 0
             or not (self.from_address_valid and self.to_address_valid
                  and self.begin_date_valid and self.end_date_valid)):
+            print('not validated')
             return
         
         else:
-            self.prev_from = self.from_address
-            self.prev_to = self.to_address
-            self.prev_begin_date = self.begin_date
-            self.prev_end_date = self.end_date
-            self.prev_only_direct = self.only_direct
+            print('validated')
+            self.load_data()
             
 
     def load_data(self):
 
-        (self.blocks,
-         self.traces,
-         self.transactions) = load_data_from_db(self.network,
-                                                self.from_address,
-                                                self.to_address)
+        print('loading data')
 
+        (self.blocks,
+         self.transactions,
+         self.traces) = load_data_from_db(self.network,
+                                          self.from_address,
+                                          self.to_address)
+
+        print('loaded')
+        print(f'traces: {len(self.traces)}')
+        print(f'txs: {len(self.transactions)}')
+        print(f'blocks: {len(self.blocks)}')
+        
         self.filter_data()
 
     
     def filter_data(self):
 
-        begin_timestamp = 0
-        try:
-            begin_timestamp = datetime.timestamp(self.begin_date)
-        except:
-            pass
+        filtered = False
 
-        end_timestamp = 0
-        try:
-            end_timestamp = datetime.timestamp(self.end_date)
-        except:
-            pass
+        print(f'self.begin_date_timestamp: {self.begin_date_timestamp}, self.end_date_timestamp: {self.end_date_timestamp}')
 
-        if (begin_timestamp >= 1702598399 and begin_timestamp <= 19008564):
-            self.filtered_blocks = filter(lambda block: block['timestamp'] > begin_timestamp, self.blocks)
-            #self.filtered_transactions = filter(lambda tx: tx[])
-        if (end_timestamp >= 1702598399 and end_timestamp <= 19008564):
-            self.filtered_blocks = filter(lambda block: block['timestamp'] < end_timestamp, self.blocks)
 
+        if (self.begin_date_valid and int(float(self.begin_date_timestamp)) > 1702598340):
+            filtered = True
+            self.filtered_blocks = list(filter(lambda block: int(block['timestamp']) >= int(float(self.begin_date_timestamp)), self.blocks))
+            self.filter_by_block_numbers()
+            
+        if (self.end_date_valid and int(float(self.end_date_timestamp)) < 1705276740):
+            filtered = True
+            self.filtered_blocks = list(filter(lambda block: int(block['timestamp']) <= int(float(self.end_date_timestamp)), self.blocks))
+            self.filter_by_block_numbers()
+
+        if not filtered:
+            (self.filtered_blocks,
+            self.filtered_transactions,
+            self.filtered_traces) = (self.blocks,
+                                    self.transactions,
+                                    self.traces)
+
+        self.force_render = True
+
+        print('filtered')
+        print(f'traces: {len(self.filtered_traces)}')
+        print(f'txs: {len(self.filtered_transactions)}')
+        print(f'blocks: {len(self.filtered_blocks)}')
+
+ 
+    def filter_by_block_numbers(self):
+        print('filter_by_block_numbers')
+        filtered_block_numbers = frozenset([block['id'] for block in self.filtered_blocks])
+        self.filtered_transactions = list(filter(lambda tx: tx['block_number'] in filtered_block_numbers, self.transactions))
+        filtered_tx_hashes = frozenset([tx['id'] for tx in self.filtered_transactions])
+        self.filtered_traces = list(filter(lambda trace: trace['trace']['transaction_hash'] in filtered_tx_hashes, self.traces))
+
+
+    def count_metrics(self):
+        print('count metrix')
+
+
+    def updated_from_address(self, prompt):
+        self.from_address_valid = validate_address(prompt)
+
+    def updated_to_address(self, prompt):
+        self.to_address_valid = validate_address(prompt)
+
+    def updated_begin_date(self, prompt):
+        self.begin_date_timestamp = timestamp_from_datetime_str(prompt)
+        self.begin_date_valid = validate_date(self.begin_date_timestamp)
+        if (self.begin_date_valid):
+            self.filter_data()
+
+    def updated_end_date(self, prompt):
+        self.end_date_timestamp = timestamp_from_datetime_str(prompt)
+        self.end_date_valid = validate_date(self.end_date_timestamp)
+        if (self.end_date_valid):
+            self.filter_data()
+
+
+    def updated_network(self, prompt):
+        # save to cache
+        # clear all filters
+        pass
