@@ -9,13 +9,10 @@ class HomeView(UnicornView):
     networks = ['Ethereum', 'BSC'] 
     
     network = networks[0]
-    blocks = []
-    transactions = []
-    traces = []
 
-    filtered_blocks = []
-    filtered_transactions = []
-    filtered_traces = []
+    data = []
+
+    filtered_data = []
 
     from_address = ''
     from_address_valid = True
@@ -31,6 +28,8 @@ class HomeView(UnicornView):
     end_date_timestamp = timestamp_from_datetime_str(end_date)
     end_date_valid = True
 
+    
+
     def validate_load_request(self):
 
         if (len(self.from_address) == 0 and len(self.to_address) == 0
@@ -45,65 +44,40 @@ class HomeView(UnicornView):
             
 
     def load_data(self):
-
-        print('loading data')
-
-        (self.blocks,
-         self.transactions,
-         self.traces) = load_data_from_db(self.network,
-                                          self.from_address,
-                                          self.to_address)
-
-        print('loaded')
-        print(f'traces: {len(self.traces)}')
-        print(f'txs: {len(self.transactions)}')
-        print(f'blocks: {len(self.blocks)}')
-        
-        self.filter_data()
+        self.data = load_data_from_db(self.network,
+                                      self.from_address,
+                                      self.to_address)
+        self.filter_data() 
 
     
     def filter_data(self):
 
         filtered = False
 
-        print(f'self.begin_date_timestamp: {self.begin_date_timestamp}, self.end_date_timestamp: {self.end_date_timestamp}')
-
-
         if (self.begin_date_valid and int(float(self.begin_date_timestamp)) > 1702598340):
             filtered = True
-            self.filtered_blocks = list(filter(lambda block: int(block['timestamp']) >= int(float(self.begin_date_timestamp)), self.blocks))
-            self.filter_by_block_numbers()
+            self.filtered_data = list(filter(lambda block_data: int(block_data['timestamp']) >= int(float(self.begin_date_timestamp)), self.data))
             
         if (self.end_date_valid and int(float(self.end_date_timestamp)) < 1705276740):
             filtered = True
-            self.filtered_blocks = list(filter(lambda block: int(block['timestamp']) <= int(float(self.end_date_timestamp)), self.blocks))
-            self.filter_by_block_numbers()
+            self.filtered_data = list(filter(lambda block_data: int(block_data['timestamp']) <= int(float(self.end_date_timestamp)), self.data))
 
         if not filtered:
-            (self.filtered_blocks,
-            self.filtered_transactions,
-            self.filtered_traces) = (self.blocks,
-                                    self.transactions,
-                                    self.traces)
+            self.filtered_data = self.data
 
         self.force_render = True
 
-        print('filtered')
-        print(f'traces: {len(self.filtered_traces)}')
-        print(f'txs: {len(self.filtered_transactions)}')
-        print(f'blocks: {len(self.filtered_blocks)}')
+        self.count_metrics()
 
- 
-    def filter_by_block_numbers(self):
-        print('filter_by_block_numbers')
-        filtered_block_numbers = frozenset([block['id'] for block in self.filtered_blocks])
-        self.filtered_transactions = list(filter(lambda tx: tx['block_number'] in filtered_block_numbers, self.transactions))
-        filtered_tx_hashes = frozenset([tx['id'] for tx in self.filtered_transactions])
-        self.filtered_traces = list(filter(lambda trace: trace['trace']['transaction_hash'] in filtered_tx_hashes, self.traces))
+        print(f'filtered: {filtered}')
 
 
     def count_metrics(self):
         print('count metrix')
+
+        
+
+        self.force_render = True
 
 
     def updated_from_address(self, prompt):
@@ -123,6 +97,15 @@ class HomeView(UnicornView):
         self.end_date_valid = validate_date(self.end_date_timestamp)
         if (self.end_date_valid):
             self.filter_data()
+
+
+    def set_show_traces(self, block_number, tx_index_in_block):
+        print(f'called with {block_number}, {tx_index_in_block}')
+        for tx_data in self.filtered_data[str(block_number)]['transactions'].values():
+            if(tx_data['tx']['transaction_index'] == tx_index_in_block):
+                print(f'set show traces {tx_data["tx"]["id"]}')
+                tx_data['show_traces'] = not tx_data['show_traces']
+        self.force_render = True
 
 
     def updated_network(self, prompt):
