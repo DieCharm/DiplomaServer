@@ -3,6 +3,10 @@ from home.utils.load_data_from_db import load_data_from_db
 from home.utils.validate_address import validate_address
 from home.utils.timestamp_from_datetime_str import timestamp_from_datetime_str
 from home.utils.validate_date import validate_date
+from home.utils.get_token_transfers import get_token_transfers
+from home.utils.get_counterparty_interactions import get_counterparty_interactions
+from home.utils.get_timeline_data import get_timeline_data
+import pandas
 
 class HomeView(UnicornView):
 
@@ -28,7 +32,18 @@ class HomeView(UnicornView):
     end_date_timestamp = timestamp_from_datetime_str(end_date)
     end_date_valid = True
 
-    
+    loaded = False
+
+    token_codes = []
+    token_names = []
+    token_addresses = []
+    token_number_of_operations = []
+
+    counterparty_addresses = []
+    counterparty_numbers_of_interactions = []
+
+    dates = []
+    value_sums = []
 
     def validate_load_request(self):
 
@@ -40,6 +55,7 @@ class HomeView(UnicornView):
         
         else:
             print('validated')
+            self.loaded = False
             self.load_data()
             
 
@@ -47,23 +63,31 @@ class HomeView(UnicornView):
         self.data = load_data_from_db(self.network,
                                       self.from_address,
                                       self.to_address)
+        print(f'loaded {len(self.data)} blocks')
         self.filter_data() 
 
     
     def filter_data(self):
 
         filtered = False
+        self.filtered_data = self.data
 
         if (self.begin_date_valid and int(float(self.begin_date_timestamp)) > 1702598340):
             filtered = True
-            self.filtered_data = list(filter(lambda block_data: int(block_data['timestamp']) >= int(float(self.begin_date_timestamp)), self.data))
+            self.filtered_data = dict((block_number, self.filtered_data[block_number])
+                for block_number 
+                in self.filtered_data.keys() 
+                if (self.filtered_data[block_number]['timestamp'] >= int(float(self.begin_date_timestamp))))
+            #self.filtered_data = list(filter(lambda block_data: int(block_data['timestamp']) >= int(float(self.begin_date_timestamp)), self.filtered_data))
             
         if (self.end_date_valid and int(float(self.end_date_timestamp)) < 1705276740):
             filtered = True
-            self.filtered_data = list(filter(lambda block_data: int(block_data['timestamp']) <= int(float(self.end_date_timestamp)), self.data))
-
-        if not filtered:
-            self.filtered_data = self.data
+            self.filtered_data = dict((block_number, self.filtered_data[block_number])
+                for block_number 
+                in self.filtered_data.keys() 
+                if (self.filtered_data[block_number]['timestamp'] <= int(float(self.end_date_timestamp))))
+            
+            #self.filtered_data = list(filter(lambda block_data: int(block_data['timestamp']) <= int(float(self.end_date_timestamp)), self.filtered_data))
 
         self.force_render = True
 
@@ -75,9 +99,45 @@ class HomeView(UnicornView):
     def count_metrics(self):
         print('count metrix')
 
-        
+        blocks_set = [int(block_number) for block_number in self.filtered_data.keys()]
 
-        self.force_render = True
+        if (len(blocks_set) > 0):
+
+            min_block_number = min(blocks_set)
+            max_block_number = max(blocks_set)
+
+            (
+                self.token_codes,
+                self.token_names,
+                self.token_addresses,
+                self.token_number_of_operations
+                ) = get_token_transfers(
+                    min_block_number,
+                    max_block_number,
+                    self.from_address,
+                    self.to_address
+                    )
+            
+            (
+                self.counterparty_addresses,
+                self.counterparty_numbers_of_interactions
+                ) = get_counterparty_interactions(
+                    self.filtered_data,
+                    self.from_address,
+                    self.to_address,
+                    self.token_addresses)
+            
+            (
+                self.dates,
+                self.value_sums
+                ) = get_timeline_data(
+                    self.filtered_data)
+            print(self.dates)
+            print(self.value_sums)
+            
+            self.loaded = True
+            self.call('renderGraphs')
+            self.force_render = True
 
 
     def updated_from_address(self, prompt):
@@ -105,10 +165,37 @@ class HomeView(UnicornView):
             if(tx_data['tx']['transaction_index'] == tx_index_in_block):
                 print(f'set show traces {tx_data["tx"]["id"]}')
                 tx_data['show_traces'] = not tx_data['show_traces']
-        self.force_render = True
 
 
     def updated_network(self, prompt):
-        # save to cache
-        # clear all filters
-        pass
+
+        self.data = []
+
+        self.filtered_data = []
+
+        self.from_address = ''
+        self.from_address_valid = True
+
+        self.to_address = ''
+        self.to_address_valid = True
+
+        self.begin_date = '2023-12-14T23:59'
+        self.begin_date_timestamp = timestamp_from_datetime_str(self.begin_date)
+        self.begin_date_valid = True
+
+        self.end_date = '2024-01-14T23:59'
+        self.end_date_timestamp = timestamp_from_datetime_str(self.end_date)
+        self.end_date_valid = True
+
+        self.loaded = False
+
+        self.token_codes = []
+        self.token_names = []
+        self.token_addresses = []
+        self.token_number_of_operations = []
+
+        self.counterparty_addresses = []
+        self.counterparty_numbers_of_interactions = []
+
+        self.dates = []
+        self.value_sums = []

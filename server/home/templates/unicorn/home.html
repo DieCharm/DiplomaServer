@@ -1,9 +1,127 @@
 {% extends 'index.html' %}
 {% load unicorn %}
 {% load static %}
+{% load cache %}
+
 {% block content %}
 
 <div unicorn:view>
+
+    {{ token_codes|json_script:'token_codes_script' }}
+    {{ token_names|json_script:'token_names_script' }}
+    {{ token_number_of_operations|json_script:'token_number_of_operations_script' }}
+
+    {{ counterparty_addresses|json_script:'counterparty_addresses_script' }}
+    {{ counterparty_numbers_of_interactions|json_script:'counterparty_numbers_of_interactions_script' }}
+
+    {{ dates|json_script:'dates_script' }}
+    {{ value_sums|json_script:'value_sums_script' }}
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
+    <script>
+
+        function renderGraphs () {
+
+            const token_codes = JSON.parse(document.getElementById('token_codes_script').textContent);
+            const token_names = JSON.parse(document.getElementById('token_names_script').textContent);
+            const token_numbers_of_operations = JSON.parse(document.getElementById('token_number_of_operations_script').textContent);
+
+            const counterparty_addresses = JSON.parse(document.getElementById('counterparty_addresses_script').textContent);
+            const counterparty_numbers_of_interactions = JSON.parse(document.getElementById('counterparty_numbers_of_interactions_script').textContent);
+
+            const dates = JSON.parse(document.getElementById('dates_script').textContent);
+            const value_sums = JSON.parse(document.getElementById('value_sums_script').textContent);
+
+            let tokensChartStatus = Chart.getChart("tokensChart");
+            if (tokensChartStatus != undefined) {
+                tokensChartStatus.destroy();
+            }
+            let counterpartiesChartStatus = Chart.getChart("counterpartiesChart");
+            if (tokensChartStatus != undefined) {
+                counterpartiesChartStatus.destroy();
+            }
+            let timelineChartStatus = Chart.getChart("timelineChart");
+            if (tokensChartStatus != undefined) {
+                timelineChartStatus.destroy();
+            }
+
+            const ctxTokens = document.getElementById('tokensChart');
+            const ctxCounterparties = document.getElementById('counterpartiesChart');
+            const ctxTimeline = document.getElementById('timelineChart');
+
+            new Chart(ctxTokens, {
+                type: 'pie',
+                data: {
+                    labels: token_codes,
+                    datasets: [{
+                        data: token_numbers_of_operations,
+                        borderWidth: 1
+                    }]
+                },
+                plugins: [ChartDataLabels],
+                options: {
+                    responsive: false,
+                    plugins: {
+                        legend: {
+                            position: 'left'
+                        }
+                    }
+                }
+            });
+
+            new Chart(ctxCounterparties, {
+                type: 'pie',
+                data: {
+                    labels: counterparty_addresses,
+                    datasets: [{
+                        data: counterparty_numbers_of_interactions,
+                        borderWidth: 1
+                    }]
+                },
+                plugins: [ChartDataLabels],
+                options: {
+                    responsive: false,
+                    plugins: {
+                        legend: {
+                            position: 'left'
+                        }
+                    }
+                }
+            });
+
+            new Chart(ctxTimeline, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        data: value_sums,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false,
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false,
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
 
     <div class="m-3">
         <div class="row">
@@ -94,6 +212,7 @@
         </div>
 
         <button
+            unicorn:partial="all-page"
             unicorn:click="validate_load_request"
             type="button"
             class="btn btn-primary m-2"
@@ -107,35 +226,30 @@
         <div
             class="w-100 h-50 d-flex flex-row"
             style="align-items: center; justify-content: space-around;">
-            <div style="height: 80%; width: 25%;">
-                <canvas id="tokensChart">
-
-                </canvas>
+            <div style="position: relative; height: 80%; width: 30%;">             
+                <canvas style="height: 100%; width: 100%;" id="tokensChart"></canvas>
             </div>
-            <div style="height: 80%; width: 25%; background-color:aqua;">
-
+            <div style="position: relative; height: 80%; width: 30%;">
+                <canvas style="height: 100%; width: 100%;" id="counterpartiesChart"></canvas>
             </div>
-            <div style="height: 80%; width: 25%; background-color:aqua;">
-
+            <div style="position: relative; height: 80%; width: 30%;">
+                <canvas style="height: 100%; width: 100%;" id="timelineChart"></canvas>
             </div>
         </div>
 
         <div class="w-100 h-50 d-flex flex-column align-items-center overflow-auto">
             {% for block_data in filtered_data.values %}
                 {% for tx in block_data.transactions.values %}
-                    <div class="w-75 m-2 d-flex flex-column align-items-center border border-primary rounded position-relative">
+                    <div
+                        unicorn:key="{{tx.tx.id}}"
+                        class="w-75 m-2 d-flex flex-column align-items-center border border-primary rounded position-relative">
 
                         <div
-                            class="border border-dark"
-                            class="dropdown-button-wrapper">
+                            class="border border-dark dropdown-button-wrapper {% if tx.show_traces %} rotate180 {% endif %}">
                             <img
+                                unicorn:partial.key="{{tx.tx.id}}"
                                 unicorn:click="set_show_traces({{block_data.id}}, {{tx.tx.transaction_index}})"
-                                class="dropdown-button
-                                    {% if not tx.show_traces %}
-                                        dropdown-button-active
-                                    {% else %}
-                                        dropdown-button-inactive
-                                    {% endif %}"
+                                class="dropdown-button"
                                 src="{% static 'dropdown.png' %}" />
                         </div>
 
@@ -181,7 +295,9 @@
                                         class="d-flex flex-row border-bottom border-dark"
                                         style="width: 100%; justify-content: space-between;">
                                         <div>{{trace.trace.from}}</div>
-                                        <div>{{ trace.trace.value }}</div>
+                                        <div>{{trace.after_from}}</div>
+                                        <div>{{trace.trace.trace_address}}</div>
+                                        <div>{{trace.before_to}}</div>
                                         <div>{{trace.trace.to}}</div>
                                     </div>
                                 {% endfor %}
@@ -201,7 +317,10 @@
                 unicorn:model="network"
                 class="form-select">
                 {% for network_option in networks %}
-                    <option value="{{network_option}}">{{network_option}}</option>  
+                    <option
+                        value="{{network_option}}">
+                        {{network_option}}
+                    </option>  
                 {% endfor %}
             </select>
         </div>

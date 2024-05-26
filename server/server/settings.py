@@ -77,38 +77,44 @@ WSGI_APPLICATION = 'server.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'idle',
-    },
-    'Ethereum': {
-        'ENGINE': 'djongo',
-        'NAME': 'Ethereum',
-        'HOST': 'mongodb://localhost:27017',
-            'LOGGING': {
-                'version': 1,
-                'loggers': {
-                    'djongo': {
-                        'level': 'DEBUG',
-                        'propagate': False,                  
-                    }
-                },
-             }
-    },
-    'BSC': {
-        'ENGINE': 'djongo',
-        'NAME': 'BSC',
-        'HOST': 'mongodb://localhost:27017',
-            'LOGGING': {
-                'version': 1,
-                'loggers': {
-                    'djongo': {
-                        'level': 'DEBUG',
-                        'propagate': False,                        
-                    }
-                },
-             }
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': 'idle',
+#     },
+#     'Ethereum': {
+#         'ENGINE': 'djongo',
+#         'NAME': 'Ethereum',
+#         'HOST': 'mongodb://localhost:27017',
+#             'LOGGING': {
+#                 'version': 1,
+#                 'loggers': {
+#                     'djongo': {
+#                         'level': 'DEBUG',
+#                         'propagate': False,                  
+#                     }
+#                 },
+#              }
+#     },
+#     'BSC': {
+#         'ENGINE': 'djongo',
+#         'NAME': 'BSC',
+#         'HOST': 'mongodb://localhost:27017',
+#             'LOGGING': {
+#                 'version': 1,
+#                 'loggers': {
+#                     'djongo': {
+#                         'level': 'DEBUG',
+#                         'propagate': False,                        
+#                     }
+#                 },
+#              }
+#     }
+# }
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
     }
 }
 
@@ -142,6 +148,8 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600
 
 
 # Static files (CSS, JavaScript, Images)
