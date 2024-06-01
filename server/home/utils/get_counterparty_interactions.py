@@ -34,7 +34,9 @@ def get_counterparty_interactions(data, from_address, to_address, token_addresse
         transfers_df = transfers_df.groupby('address').size()
     result_df = transfers_df.reset_index()
     result_list = result_df.values.tolist()
-    result_list.sort(key = lambda addr_count_pair: addr_count_pair[1])
+    result_list.sort(reverse = True, key = lambda addr_count_pair: addr_count_pair[1])
+    if (len(result_list) > 10):
+        result_list = result_list[:10]
 
     return (
         [addr_count_pair[0] for addr_count_pair in result_list],

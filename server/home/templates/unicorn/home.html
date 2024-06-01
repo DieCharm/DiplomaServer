@@ -237,76 +237,103 @@
             </div>
         </div>
 
-        <div class="w-100 h-50 d-flex flex-column align-items-center overflow-auto">
-            {% for block_data in filtered_data.values %}
-                {% for tx in block_data.transactions.values %}
-                    <div
-                        unicorn:key="{{tx.tx.id}}"
-                        class="w-75 m-2 d-flex flex-column align-items-center border border-primary rounded position-relative">
 
+        <div class="row justify-content-end position-absolute end-0 m-2 w-50">
+            <div class="col-3">
+                <select
+                    unicorn:partial.key="raw_info_container"
+                    unicorn:model="show_txs_or_countracts"
+                    class="form-select">
+                    {% for show_txs_or_countracts_option in show_txs_or_countracts_options %}
+                        <option
+                            value="{{show_txs_or_countracts_option}}">
+                            {{show_txs_or_countracts_option}}
+                        </option>  
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+
+        <div
+            unicorn:key="raw_info_container"
+            class="w-100 h-50 d-flex flex-column align-items-center overflow-auto">
+            {% if show_txs_or_countracts == "Transactions" %}
+                {% for block_data in filtered_data.values %}
+                    {% for tx in block_data.transactions.values %}
                         <div
-                            class="border border-dark dropdown-button-wrapper {% if tx.show_traces %} rotate180 {% endif %}">
-                            <img
-                                unicorn:partial.key="{{tx.tx.id}}"
-                                unicorn:click="set_show_traces({{block_data.id}}, {{tx.tx.transaction_index}})"
-                                class="dropdown-button"
-                                src="{% static 'dropdown.png' %}" />
-                        </div>
+                            unicorn:key="{{tx.tx.id}}"
+                            class="w-75 m-2 d-flex flex-column align-items-center border border-primary rounded position-relative">
 
-                        <div class="d-flex flex-row border-bottom border-dark" style="width: 80%; justify-content: space-between;">
-                            <div><b>{{tx.tx.id}}</b></div>
-                            <div><b>Traces</b>: {{tx.tx.traces_len}}</div>
-                        </div>
-                        <div class="d-flex flex-row border-bottom border-dark" style="width: 80%; justify-content: space-between;">
-                            <div><b>From</b>: {{tx.tx.from}}</div>
-                            <div><b>To</b>: {{tx.tx.to}}</div>
-                        </div>
-                        <div class="d-flex flex-row border-bottom border-dark" style="width: 80%;justify-content: space-between;">
-                            <div><b>Block number</b>: {{tx.tx.block_number}}</div>
-                            <div><b>Index in block</b>: {{tx.tx.transaction_index}}</div>
-                        </div>
-                        <div
-                            class="d-flex flex-row border-bottom {% if tx.show_traces %} border-dark {% endif %}"
-                            style="width: 80%; justify-content: space-between;">
-                            <div><b>Gas</b>: {{tx.tx.gas}}</div>
-                            <div>
-                                {% if 'max_fee_per_gas' in tx.tx %}
-                                    <b>Max fee per gas</b>: {{tx.tx.max_fee_per_gas}}
-                                {% endif %}
-                            </div>
-                            <div>
-                                {% if 'max_priority_fee_per_gas' in tx.tx %}
-                                    <b>Max priority fee per gas</b>: {{tx.tx.max_priority_fee_per_gas}}
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        {% if tx.show_traces %}
                             <div
-                                class="d-flex flex-column"
-                                style="width: 80%;">
-                                <div
-                                        class="d-flex flex-row border-bottom border-dark"
-                                        style="width: 100%; justify-content: space-between;">
-                                        <div><b>Traces:</b></div>
-                                    </div>
-                                {% for trace in tx.tx.traces %}
-                                    <div
-                                        class="d-flex flex-row border-bottom border-dark"
-                                        style="width: 100%; justify-content: space-between;">
-                                        <div>{{trace.trace.from}}</div>
-                                        <div>{{trace.after_from}}</div>
-                                        <div>{{trace.trace.trace_address}}</div>
-                                        <div>{{trace.before_to}}</div>
-                                        <div>{{trace.trace.to}}</div>
-                                    </div>
-                                {% endfor %}
+                                class="border border-dark dropdown-button-wrapper {% if tx.show_traces %} rotate180 {% endif %}">
+                                <img
+                                    unicorn:partial.key="{{tx.tx.id}}"
+                                    unicorn:click="set_show_traces({{block_data.id}}, {{tx.tx.transaction_index}})"
+                                    class="dropdown-button"
+                                    src="{% static 'dropdown.png' %}" />
                             </div>
-                        {% endif %}
-                    </div>
-                    
+
+                            <div class="d-flex flex-row border-bottom border-dark" style="width: 80%; justify-content: space-between;">
+                                <div><b>{{tx.tx.id}}</b></div>
+                                <div><b>Traces</b>: {{tx.tx.traces_len}}</div>
+                            </div>
+                            <div class="d-flex flex-row border-bottom border-dark" style="width: 80%; justify-content: space-between;">
+                                <div><b>From</b>: {{tx.tx.from}}</div>
+                                <div><b>To</b>: {{tx.tx.to}}</div>
+                            </div>
+                            <div class="d-flex flex-row border-bottom border-dark" style="width: 80%;justify-content: space-between;">
+                                <div><b>Block number</b>: {{tx.tx.block_number}}</div>
+                                <div><b>Date</b>: {{tx.tx.datetime}}</div>
+                                <div><b>Index in block</b>: {{tx.tx.transaction_index}}</div>
+                            </div>
+                            <div
+                                class="d-flex flex-row border-bottom {% if tx.show_traces %} border-dark {% endif %}"
+                                style="width: 80%; justify-content: space-between;">
+                                <div><b>Gas</b>: {{tx.tx.gas}}</div>
+                                <div><b>Gas price</b>: {{tx.tx.gas_price}}</div>
+                                <div>
+                                    {% if 'max_fee_per_gas' in tx.tx %}
+                                        <b>Max fee per gas</b>: {{tx.tx.max_fee_per_gas}}
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    {% if 'max_priority_fee_per_gas' in tx.tx %}
+                                        <b>Max priority fee per gas</b>: {{tx.tx.max_priority_fee_per_gas}}
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            {% if tx.show_traces %}
+                                <div
+                                    class="d-flex flex-column"
+                                    style="width: 80%;">
+                                    <div
+                                            class="d-flex flex-row border-bottom border-dark"
+                                            style="width: 100%; justify-content: space-between;">
+                                            <div><b>Traces:</b></div>
+                                        </div>
+                                    {% for trace in tx.tx.traces %}
+                                        <div
+                                            class="d-flex flex-row border-bottom border-dark"
+                                            style="width: 100%; justify-content: space-between;">
+                                            <div>{{trace.trace.from}}</div>
+                                            <div style="height: 1.5em; display: flex; align-items: center;">
+                                                <img
+                                                    class="dropdown-button"
+                                                    src="{% static 'right_arrow.png' %}" />
+                                            </div>
+                                            <div>{{trace.trace.to}}</div>
+                                            <div><b>Gas used</b>: {{trace.trace.gas_used}}</div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                    {% endfor %}
                 {% endfor %}
-            {% endfor %}
+            {% endif %}
         </div>
 
     </div>

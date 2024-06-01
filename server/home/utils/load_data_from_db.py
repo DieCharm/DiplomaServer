@@ -9,6 +9,7 @@ from home.utils.mark_traces.before_to import before_to
 from home.utils.compare_traces import compare_traces
 from functools import cmp_to_key
 import bson
+from datetime import datetime
 
 mongo = pymongo.MongoClient('mongodb://localhost:27017')
 
@@ -151,6 +152,7 @@ def load_data_from_db(network, from_address, to_address):
         for tx_hash in block_data['transactions']:
             tx_data = block_data['transactions'][tx_hash]
             parse_data(tx_data['tx'])
+            tx_data['tx']['datetime'] = datetime.fromtimestamp(block_data['timestamp'])
             for trace_data in tx_data['tx']['traces']:
                 parse_data(trace_data['trace'])
 

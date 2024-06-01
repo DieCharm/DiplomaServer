@@ -10,8 +10,10 @@ import pandas
 
 class HomeView(UnicornView):
 
-    networks = ['Ethereum', 'BSC'] 
+    networks = ['Ethereum', 'BSC']
+    show_txs_or_countracts_options = ['Transactions', 'Contracts']
     
+    show_txs_or_countracts = show_txs_or_countracts_options[0]
     network = networks[0]
 
     data = []
@@ -97,7 +99,6 @@ class HomeView(UnicornView):
 
 
     def count_metrics(self):
-        print('count metrix')
 
         blocks_set = [int(block_number) for block_number in self.filtered_data.keys()]
 
@@ -134,6 +135,8 @@ class HomeView(UnicornView):
                     self.filtered_data)
             print(self.dates)
             print(self.value_sums)
+
+            # here count deviation
             
             self.loaded = True
             self.call('renderGraphs')
@@ -165,6 +168,11 @@ class HomeView(UnicornView):
             if(tx_data['tx']['transaction_index'] == tx_index_in_block):
                 print(f'set show traces {tx_data["tx"]["id"]}')
                 tx_data['show_traces'] = not tx_data['show_traces']
+
+
+    # def updated_show_txs_or_countracts(self, prompt):
+    #     print('change view')
+
 
 
     def updated_network(self, prompt):

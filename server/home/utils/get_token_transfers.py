@@ -40,6 +40,9 @@ def get_token_transfers(min_block_number, max_block_number, from_address, to_add
     result_df = transfers_df.reset_index()
     # [['BYTES', 'BYTES', 1], ['GSWIFT', 'GameSwift', 1], ['WILD', 'Wilder', 1], ['imgnAI', 'Image Generation AI | imgnAI.com', 2]]
     result_list = result_df.values.tolist()
+    result_list.sort(reverse = True, key = lambda token_array: token_array[3])
+    if (len(result_list) > 10):
+        result_list = result_list[:10]
     return (
         [token_array[0] for token_array in result_list],
         [token_array[1] for token_array in result_list],

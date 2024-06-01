@@ -12,8 +12,6 @@ def get_timeline_data(data):
             tx_data = block_data['transactions'][tx_hash]
             for trace_data in tx_data['tx']['traces']:
                 if (trace_data['after_from'] == True and trace_data['before_to'] == True):
-                    # print(f'value_sum_by_timestamps[block_data["timestamp"]]: {value_sum_by_timestamps[block_data["timestamp"]]} ({type(value_sum_by_timestamps[block_data["timestamp"]])})')
-                    # print(f"trace_data['trace']['value']: {trace_data['trace']['value']} ({type(trace_data['trace']['value'])})")
                     value_sum_by_timestamps[block_data['timestamp']] += float(trace_data['trace']['value'])
 
     value_sum_by_dates = []
@@ -35,7 +33,8 @@ def get_timeline_data(data):
         min_date = min(dates_of_txs_dict.keys())
         max_date = max(dates_of_txs_dict.keys())
 
-        days_count = max_date.day - min_date.day + 1
+        days_count = (max_date - min_date).days + 1
+        print(f'{min_date}, {max_date}, {days_count}')
 
         result_list = []
 
@@ -48,3 +47,4 @@ def get_timeline_data(data):
             )
     else:
         return ([],[])
+    
