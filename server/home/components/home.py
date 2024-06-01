@@ -6,7 +6,7 @@ from home.utils.validate_date import validate_date
 from home.utils.get_token_transfers import get_token_transfers
 from home.utils.get_counterparty_interactions import get_counterparty_interactions
 from home.utils.get_timeline_data import get_timeline_data
-import pandas
+from home.utils.prioritize_counterparties import prioritize_counterparties
 
 class HomeView(UnicornView):
 
@@ -43,6 +43,8 @@ class HomeView(UnicornView):
 
     counterparty_addresses = []
     counterparty_numbers_of_interactions = []
+
+    prioritized_counterparties = []
 
     dates = []
     value_sums = []
@@ -136,7 +138,17 @@ class HomeView(UnicornView):
             print(self.dates)
             print(self.value_sums)
 
-            # here count deviation
+            interval = (60 * 60 * 24) + 1 # беремо інтервали розміром в добу
+            period = 31
+
+            if (self.from_address_valid and self.from_address != ''):
+                self.prioritized_counterparties = prioritize_counterparties(
+                    self.filtered_data,
+                    self.from_address,
+                    interval,
+                    period)
+            else:
+                self.prioritized_counterparties = []
             
             self.loaded = True
             self.call('renderGraphs')
