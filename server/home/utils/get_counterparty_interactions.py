@@ -20,8 +20,13 @@ def get_counterparty_interactions(data, from_address, to_address, token_addresse
             tx_data = block_data['transactions'][tx_hash]
             trace_for_metrics_by_tx[tx_hash] = []
             for trace_data in tx_data['tx']['traces']:
-                if (trace_data['after_from'] == True and trace_data['before_to'] == True):
-                    trace_for_metrics_by_tx[tx_hash].extend([trace_data['trace']['from'], trace_data['trace']['to']])
+                if (
+                    trace_data['after_from'] == True 
+                    and trace_data['before_to'] == True
+                    and 'to' in trace_data['trace'].keys()
+                    and 'from' in trace_data['trace'].keys()):
+
+                        trace_for_metrics_by_tx[tx_hash].extend([trace_data['trace']['from'], trace_data['trace']['to']])
 
     for tx_hash in trace_for_metrics_by_tx.keys():
         trace_for_metrics_by_tx[tx_hash] = list(set(trace_for_metrics_by_tx[tx_hash]))

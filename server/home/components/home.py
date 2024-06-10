@@ -70,8 +70,10 @@ class HomeView(UnicornView):
         print(f'loaded {len(self.data)} blocks')
         self.filter_data() 
 
-    
+
     def filter_data(self):
+
+        print('begin FILTERING')
 
         filtered = False
         self.filtered_data = self.data
@@ -87,8 +89,8 @@ class HomeView(UnicornView):
         if (self.end_date_valid and int(float(self.end_date_timestamp)) < 1705276740):
             filtered = True
             self.filtered_data = dict((block_number, self.filtered_data[block_number])
-                for block_number 
-                in self.filtered_data.keys() 
+                for block_number
+                in self.filtered_data.keys()
                 if (self.filtered_data[block_number]['timestamp'] <= int(float(self.end_date_timestamp))))
             
             #self.filtered_data = list(filter(lambda block_data: int(block_data['timestamp']) <= int(float(self.end_date_timestamp)), self.filtered_data))
@@ -118,7 +120,8 @@ class HomeView(UnicornView):
                     min_block_number,
                     max_block_number,
                     self.from_address,
-                    self.to_address
+                    self.to_address,
+                    self.network
                     )
             
             (
@@ -138,14 +141,14 @@ class HomeView(UnicornView):
             print(self.dates)
             print(self.value_sums)
 
-            interval = (60 * 60 * 24) + 1 # беремо інтервали розміром в добу
-            period = 31
+            seasonal = (60 * 60 * 24) + 1
+            period = 5
 
             if (self.from_address_valid and self.from_address != ''):
                 self.prioritized_counterparties = prioritize_counterparties(
                     self.filtered_data,
                     self.from_address,
-                    interval,
+                    seasonal,
                     period)
             else:
                 self.prioritized_counterparties = []

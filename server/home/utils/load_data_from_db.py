@@ -108,11 +108,11 @@ def load_data_from_db(network, from_address, to_address):
                 continue
 
             initial_from_traces_of_current_tx = list(filter(
-                lambda trace: trace['from'].hex() == from_binary.hex(),
+                lambda trace: ('from' in trace.keys() and trace['from'].hex() == from_binary.hex()),
                 all_traces_from_current_tx_list))
 
             initial_to_traces_of_current_tx = list(filter(
-                lambda trace: trace['to'].hex() == to_binary.hex(),
+                lambda trace: ('to' in trace.keys() and trace['to'].hex() == to_binary.hex()),
                 all_traces_from_current_tx_list))
 
             initial_from_trace_addresses_list = [trace['trace_address'] for trace in initial_from_traces_of_current_tx] # [[], []]

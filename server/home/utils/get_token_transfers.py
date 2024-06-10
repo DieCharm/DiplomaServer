@@ -2,18 +2,24 @@ import requests
 import json
 import pandas
 
-def get_token_transfers(min_block_number, max_block_number, from_address, to_address):
+def get_token_transfers(min_block_number, max_block_number, from_address, to_address, network):
+
     etherscan_key = '4W9AKX112W48T91UMKIADBM73VKMKG1CPI'
+    bscscan_key = '9ZHXYW3YSA38RNIZ2MEV7SXWPPKPHJ7FER'
+    
+    api_link = 'etherscan.io' if (network == 'Ethereum') else 'bscscan.com'
+    api_key = etherscan_key if (network == 'Ethereum') else bscscan_key
+
     from_response_data = []
     to_response_data = []
     result_data = []
     if (len(from_address) > 0):
-        url_from = f'https://api.etherscan.io/api?module=account&action=tokentx&address={from_address}&startblock={min_block_number}&endblock={max_block_number}&sort=asc&apikey={etherscan_key}'
+        url_from = f'https://api.{api_link}/api?module=account&action=tokentx&address={from_address}&startblock={min_block_number}&endblock={max_block_number}&sort=asc&apikey={api_key}'
         abi_response = requests.get(url_from)
         from_response_data = json.loads(abi_response.text)['result']
         print(f'len(from_response_data): {len(from_response_data)}')
     if (len(to_address) > 0):
-        url_from = f'https://api.etherscan.io/api?module=account&action=tokentx&address={to_address}&startblock={min_block_number}&endblock={max_block_number}&sort=asc&apikey={etherscan_key}'
+        url_from = f'https://api.{api_link}/api?module=account&action=tokentx&address={to_address}&startblock={min_block_number}&endblock={max_block_number}&sort=asc&apikey={api_key}'
         abi_response = requests.get(url_from)
         to_response_data = json.loads(abi_response.text)['result']
         print(f'len(to_response_data): {len(to_response_data)}')
@@ -49,4 +55,5 @@ def get_token_transfers(min_block_number, max_block_number, from_address, to_add
         [token_array[2] for token_array in result_list],
         [token_array[3] for token_array in result_list]
         )
+
 
